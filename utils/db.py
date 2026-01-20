@@ -8,7 +8,7 @@ def init_db():
     conn = sqlite3.connect(DB_NAME)
     c = conn.cursor()
     
-    # 1. Tabla Productos (CON COSTO Y PRECIOS EXTRA)
+    # 1. Tabla Productos
     c.execute('''CREATE TABLE IF NOT EXISTS products (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         sku TEXT UNIQUE,
@@ -37,7 +37,7 @@ def init_db():
         FOREIGN KEY(warehouse_id) REFERENCES warehouses(id)
     )''')
     
-    # 4. Tabla Kardex (Movimientos)
+    # 4. Tabla Kardex
     c.execute('''CREATE TABLE IF NOT EXISTS kardex (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         date TEXT,
@@ -48,7 +48,7 @@ def init_db():
         quantity INTEGER
     )''')
     
-    # 5. Tabla Ventas (Quotes)
+    # 5. Tabla Ventas
     c.execute('''CREATE TABLE IF NOT EXISTS quotes (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         customer_name TEXT,
@@ -57,6 +57,22 @@ def init_db():
         items_json TEXT,
         status TEXT
     )''')
+
+    # 6. Tabla Usuarios (PARA EL LOGIN)
+    c.execute('''CREATE TABLE IF NOT EXISTS users (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        username TEXT UNIQUE,
+        password TEXT,
+        role TEXT
+    )''')
+    
+    # Crear admin por defecto si no existe
+    try:
+        c.execute("SELECT count(*) FROM users")
+        if c.fetchone()[0] == 0:
+            c.execute("INSERT INTO users (username, password, role) VALUES ('admin', 'admin123', 'admin')")
+    except:
+        pass
 
     conn.commit()
     conn.close()
@@ -72,16 +88,17 @@ def run_query(query, params=()):
     except Exception as e:
         return None
 
-def get_data(query):
+# ESTA ES LA PARTE CORREGIDA (params=None)
+def get_data(query, params=None):
     try:
         conn = sqlite3.connect(DB_NAME)
-        df = pd.read_sql(query, conn)
+        if params:
+            df = pd.read_sql(query, conn, params=params)
+        else:
+            df = pd.read_sql(query, conn)
         conn.close()
         return df
     except:
         return pd.DataFrame()
 
-# Inicializar al importar
-init_db() 
-
-
+init_db()
