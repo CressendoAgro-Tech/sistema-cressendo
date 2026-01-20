@@ -82,4 +82,6 @@ def get_data(query):
         return pd.DataFrame()
 
 # Inicializar al importar
-init_db()
+init_db() 
+
+
